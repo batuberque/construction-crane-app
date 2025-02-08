@@ -3,6 +3,8 @@
 import axiosInstance from './axios';
 import { useMutation } from '@tanstack/react-query';
 
+export const imageBaseURL = 'https://storage.googleapis.com/vinc-key-images';
+
 // EMAİL QUERIES
 export interface Email {
   email: string;
@@ -117,7 +119,7 @@ export const deleteProject = async (
 // Bu fonksiyon, projenin resimlerine ait tam URL'leri döndürür
 export const getProjectImageUrls = (project: IProject): string[] => {
   return project.images.map(
-    (image) => `${axiosInstance.defaults.baseURL}/${image}`
+      (image) => `${imageBaseURL}/${image}`
   );
 };
 
