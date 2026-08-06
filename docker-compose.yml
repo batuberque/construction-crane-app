@@ -2,9 +2,9 @@ version: "3.8"
 services:
   frontend:
     image: construction-frontend
-    build: 
+    build:
       context: ./frontend
-      dockerfile: Dockerfile
+      dockerfile: dev.Dockerfile
     ports:
       - "8080:8080"
     command: npm run dev -- --host

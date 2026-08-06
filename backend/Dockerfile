@@ -18,4 +18,6 @@ RUN mkdir -p /app/uploads
 
 EXPOSE 3005
 
-CMD ["npm", "start"]
+# Not `npm start` — that runs node --watch, an experimental file-watcher that
+# has no place in production.
+CMD ["npm", "run", "start:prod"]

@@ -1,77 +1,42 @@
-import translation from '../transition';
-import { IconType, renderIcon } from '../../lib/ui/IconUtils';
+import { Link } from 'react-router-dom';
+import { TbArrowRight } from 'react-icons/tb';
 
-const services = [
-  {
-    id: 1,
-    name: 'İnşaat Yönetimi',
-    icon: 'IoConstruct' as IconType,
-    description: 'Profesyonel inşaat yönetimi hizmetleri.',
-  },
-  {
-    id: 2,
-    name: 'Vinç Kiralama',
-    icon: 'IoConstruct' as IconType,
-    description: 'Güvenilir ve modern vinç kiralama çözümleri.',
-  },
-  {
-    id: 3,
-    name: 'Proje Yönetimi',
-    icon: 'IoConstruct' as IconType,
-    description:
-      'Karmaşık inşaat projelerinizde etkin ve verimli proje yönetimi hizmetleri.',
-  },
-  {
-    id: 4,
-    name: 'Arazi Geliştirme ve Araştırma',
-    icon: 'IoConstruct' as IconType,
-    description:
-      'Potansiyel inşaat alanları için arazi analizi ve geliştirme danışmanlığı.',
-  },
-  {
-    id: 5,
-    name: 'Sürdürülebilir İnşaat Çözümleri',
-    icon: 'IoConstruct' as IconType,
-    description: 'Çevre dostu ve enerji verimli inşaat yöntemleri.',
-  },
-  {
-    id: 6,
-    name: 'Güvenlik ve Denetim Hizmetleri',
-    icon: 'IoConstruct' as IconType,
-    description: 'İnşaat alanları için güvenlik denetimi ve risk yönetimi.',
-  },
-  {
-    id: 7,
-    name: 'Ekipman ve Malzeme Tedariki',
-    icon: 'IoConstruct' as IconType,
-    description: 'Kaliteli inşaat malzemeleri ve ekipmanları tedariki.',
-  },
-];
+import Page from '../../lib/ui/Page';
+import { SERVICES } from '../../lib/services';
 
-const Service = () => {
-  return (
-    <div className="max-w-4xl mx-auto mt-20 px-4 md:px-6 pb-5">
-      <h2 className="text-center text-2xl font-bold text-gray-700 mb-6 shadow-sm font-serif">
-        HİZMETLERİMİZ
-      </h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {services.map((service) => (
-          <div
-            key={service.id}
-            className="flex items-center space-x-4 bg-white p-4 rounded-lg shadow-md"
-          >
-            {renderIcon({ iconType: service.icon, sizeClass: 'text-2xl' })}
-            <div>
-              <h3 className="font-bold text-lg text-gray-700">
-                {service.name}
-              </h3>
-              <p className="text-gray-600 text-sm">{service.description}</p>
-            </div>
-          </div>
+const Service = () => (
+  <Page>
+    <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16 md:py-24">
+      <p className="spec text-concrete mb-4">Hizmetler</p>
+      <h1 className="text-display-l font-bold uppercase max-w-[18ch]">
+        Sahada ne yapıyoruz
+      </h1>
+      <p className="mt-5 max-w-prose text-body-l text-concrete">
+        Vinç kiralamadan şantiye yürütmesine kadar, projenin hangi aşamasında
+        ihtiyaç duyarsanız devreye giriyoruz.
+      </p>
+
+      <ul className="mt-14 grid border-l border-t border-steel-line sm:grid-cols-2 lg:grid-cols-3">
+        {SERVICES.map(({ id, name, description, Icon }) => (
+          <li key={id} className="border-b border-r border-steel-line p-7">
+            <Icon aria-hidden="true" className="text-3xl text-hazard" strokeWidth={1.4} />
+            <h2 className="mt-5 text-display-m font-semibold">{name}</h2>
+            <p className="mt-2 leading-relaxed text-concrete">{description}</p>
+          </li>
         ))}
+      </ul>
+
+      <div className="mt-14 flex flex-wrap items-center gap-4 border-t border-steel-line pt-8">
+        <p className="text-body-l">Aradığınız hizmeti göremediniz mi?</p>
+        <Link
+          to="/contact"
+          className="inline-flex items-center gap-2 bg-hazard px-6 py-3.5 spec font-medium text-graphite hover:bg-hazard/90 transition-colors"
+        >
+          Bize sorun <TbArrowRight aria-hidden="true" />
+        </Link>
       </div>
     </div>
-  );
-};
+  </Page>
+);
 
 export default Service;

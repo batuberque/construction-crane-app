@@ -1,231 +1,78 @@
-import { AnimatePresence, motion } from 'framer-motion';
-import { lazy, Suspense, useLayoutEffect, useState } from 'react';
-import { Route, Routes, useLocation } from 'react-router-dom';
-import LoadingFullscreen from './Loading/LoadingComponent';
+import { lazy, Suspense, useEffect } from 'react';
+import { Navigate, Route, Routes, useLocation, useNavigationType } from 'react-router-dom';
 
-const Home = lazy(() => import('./Home/Home'));
-const Vision = lazy(() => import('./Vision/Vision'));
-const Project = lazy(() => import('./Project/Project'));
+// Eager: the entry route, and it holds the LCP image. Lazying it would cost a
+// round trip on the page most visitors land on.
+import Home from './Home/Home';
+import ProtectedRoute from './ProtectedRouter';
+import RouteFallback from './Loading/LoadingComponent';
+
+/**
+ * Single source of truth for route chunks, so NavBar can prefetch exactly what
+ * a click would load. Duplicate import() calls are free — the module registry
+ * dedupes them.
+ */
+export const pageImports = {
+  '/about': () => import('./About/About'),
+  '/service': () => import('./Service/Service'),
+  '/project': () => import('./Project/Project'),
+  '/references': () => import('./References/References'),
+  '/contact': () => import('./Contact/Contact'),
+} as const;
+
+const About = lazy(pageImports['/about']);
+const Service = lazy(pageImports['/service']);
+const Project = lazy(pageImports['/project']);
+const References = lazy(pageImports['/references']);
+const Contact = lazy(pageImports['/contact']);
 const ProjectDetail = lazy(() => import('./Project/ProjectDetail'));
-const Service = lazy(() => import('./Service/Service'));
-const ContactUs = lazy(() => import('./Contact/Contact'));
-const About = lazy(() => import('./About/About'));
-const NotFound = lazy(() => import('./NotFound/NotFound'));
 const Login = lazy(() => import('./Login/Login'));
-const ProtectedRoute = lazy(() => import('./ProtectedRouter'));
 const AdminPanel = lazy(() => import('./AdminPanel/AdminPanel'));
-const References = lazy(() => import('./References/References'));
+const NotFound = lazy(() => import('./NotFound/NotFound'));
 
-const pageTransitionVariants = {
-  initial: { opacity: 0, y: 20 },
-  animate: { opacity: 1, y: 0 },
-  exit: { opacity: 0, y: -20 },
-};
-
+/**
+ * Page transitions are a CSS enter animation keyed on the pathname.
+ *
+ * This used to be framer-motion + AnimatePresence mode="wait", which cost ~40KB
+ * gzip on the critical path — for a single fade — and held the incoming page
+ * back until the outgoing one finished animating. An enter-only transition
+ * removes the dead time and the dependency; prefers-reduced-motion is handled
+ * globally in index.css.
+ */
 const AnimatedRouter = () => {
   const location = useLocation();
-  const [isInitialMount, setIsInitialMount] = useState(true);
+  const navigationType = useNavigationType();
 
-  useLayoutEffect(() => {
-    setIsInitialMount(false);
-  }, []);
+  useEffect(() => {
+    // Keep the scroll position when the user goes Back, reset it otherwise.
+    if (navigationType !== 'POP') window.scrollTo(0, 0);
+  }, [location.pathname, navigationType]);
 
   return (
-    <div className="flex-grow">
-      <AnimatePresence initial={isInitialMount}>
-        <Routes location={location} key={location.pathname}>
-          <Route
-            path="/"
-            element={
-              <Suspense fallback={<LoadingFullscreen />}>
-                <Home />
-              </Suspense>
-            }
-          />
-
-          <Route
-            path="/vision"
-            element={
-              <Suspense fallback={<LoadingFullscreen />}>
-                <motion.div
-                  key={location.pathname}
-                  variants={pageTransitionVariants}
-                  initial="initial"
-                  animate="animate"
-                  exit="exit"
-                  transition={{ duration: 0.5, ease: 'easeInOut' }}
-                >
-                  <Vision />
-                </motion.div>
-              </Suspense>
-            }
-          />
-
-          <Route
-            path="/project"
-            element={
-              <Suspense fallback={<LoadingFullscreen />}>
-                <motion.div
-                  key={location.pathname}
-                  variants={pageTransitionVariants}
-                  initial="initial"
-                  animate="animate"
-                  exit="exit"
-                  transition={{ duration: 0.5, ease: 'easeInOut' }}
-                >
-                  <Project />
-                </motion.div>
-              </Suspense>
-            }
-          />
-
-          <Route
-            path="/project/:id"
-            element={
-              <Suspense fallback={<LoadingFullscreen />}>
-                <motion.div
-                  key={location.pathname}
-                  variants={pageTransitionVariants}
-                  initial="initial"
-                  animate="animate"
-                  exit="exit"
-                  transition={{ duration: 0.5, ease: 'easeInOut' }}
-                >
-                  <ProjectDetail />
-                </motion.div>
-              </Suspense>
-            }
-          />
-
-          <Route
-            path="/service"
-            element={
-              <Suspense fallback={<LoadingFullscreen />}>
-                <motion.div
-                  key={location.pathname}
-                  variants={pageTransitionVariants}
-                  initial="initial"
-                  animate="animate"
-                  exit="exit"
-                  transition={{ duration: 0.5, ease: 'easeInOut' }}
-                >
-                  <Service />
-                </motion.div>
-              </Suspense>
-            }
-          />
-
-          <Route
-            path="/about"
-            element={
-              <Suspense fallback={<LoadingFullscreen />}>
-                <motion.div
-                  key={location.pathname}
-                  variants={pageTransitionVariants}
-                  initial="initial"
-                  animate="animate"
-                  exit="exit"
-                  transition={{ duration: 0.5, ease: 'easeInOut' }}
-                >
-                  <About />
-                </motion.div>
-              </Suspense>
-            }
-          />
-
-          <Route
-            path="/references"
-            element={
-              <Suspense fallback={<LoadingFullscreen />}>
-                <motion.div
-                  key={location.pathname}
-                  variants={pageTransitionVariants}
-                  initial="initial"
-                  animate="animate"
-                  exit="exit"
-                  transition={{ duration: 0.5, ease: 'easeInOut' }}
-                >
-                  <References />
-                </motion.div>
-              </Suspense>
-            }
-          />
-
-          <Route
-            path="/contact"
-            element={
-              <Suspense fallback={<LoadingFullscreen />}>
-                <motion.div
-                  key={location.pathname}
-                  variants={pageTransitionVariants}
-                  initial="initial"
-                  animate="animate"
-                  exit="exit"
-                  transition={{ duration: 0.5, ease: 'easeInOut' }}
-                >
-                  <ContactUs />
-                </motion.div>
-              </Suspense>
-            }
-          />
-
-          <Route
-            path="/login"
-            element={
-              <Suspense fallback={<LoadingFullscreen />}>
-                <motion.div
-                  key={location.pathname}
-                  variants={pageTransitionVariants}
-                  initial="initial"
-                  animate="animate"
-                  exit="exit"
-                  transition={{ duration: 0.5, ease: 'easeInOut' }}
-                >
-                  <Login />
-                </motion.div>
-              </Suspense>
-            }
-          />
-
+    <div key={location.pathname} className="page-enter flex flex-col flex-grow">
+      <Suspense fallback={<RouteFallback />}>
+        <Routes location={location}>
+          <Route path="/" element={<Home />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/service" element={<Service />} />
+          <Route path="/project" element={<Project />} />
+          <Route path="/project/:id" element={<ProjectDetail />} />
+          <Route path="/references" element={<References />} />
+          <Route path="/contact" element={<Contact />} />
+          <Route path="/login" element={<Login />} />
+          {/* Vizyon is now a section of Hakkımızda; keep old links alive. */}
+          <Route path="/vision" element={<Navigate to="/about#vizyon" replace />} />
           <Route
             path="/admin"
             element={
-              <Suspense fallback={<LoadingFullscreen />}>
-                <ProtectedRoute roleRequired={'editor'}>
-                  <motion.div
-                    key={location.pathname}
-                    variants={pageTransitionVariants}
-                    initial="initial"
-                    animate="animate"
-                    exit="exit"
-                    transition={{ duration: 0.5, ease: 'easeInOut' }}
-                  >
-                    <AdminPanel />
-                  </motion.div>
-                </ProtectedRoute>
-              </Suspense>
+              <ProtectedRoute roleRequired="editor">
+                <AdminPanel />
+              </ProtectedRoute>
             }
           />
-
-          <Route
-            path="*"
-            element={
-              <Suspense fallback={<LoadingFullscreen />}>
-                <motion.div
-                  key={location.pathname}
-                  variants={pageTransitionVariants}
-                  initial="initial"
-                  animate="animate"
-                  exit="exit"
-                  transition={{ duration: 0.5, ease: 'easeInOut' }}
-                >
-                  <NotFound />
-                </motion.div>
-              </Suspense>
-            }
-          />
+          <Route path="*" element={<NotFound />} />
         </Routes>
-      </AnimatePresence>
+      </Suspense>
     </div>
   );
 };

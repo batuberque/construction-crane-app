@@ -1,54 +1,108 @@
-/* eslint-disable @typescript-eslint/restrict-template-expressions */
-/* eslint-disable @typescript-eslint/no-floating-promises */
-import { Link, Outlet } from 'react-router-dom';
-import { useEffect, useState } from 'react';
-import {IProject, fetchProjects, getProjectImageUrls} from '../../services/queries';
+import { Link } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 
-const Project = () => {
-  const [projects, setProjects] = useState<IProject[]>([]);
+import Page from '../../lib/ui/Page';
+import { IProject, fetchProjects, getProjectImageUrls } from '../../services/queries';
 
-  useEffect(() => {
-    const loadProjects = async () => {
-      const fetchedProjects = await fetchProjects();
-      setProjects(fetchedProjects);
-    };
+const CARD_W = 640;
+const CARD_H = 420;
 
-    loadProjects();
-  }, []);
+const ProjectCard = ({ project }: { project: IProject }) => {
+  const [cover] = getProjectImageUrls(project);
 
   return (
-      <div className="flex flex-col min-h-screen mb-5">
-        <div className="max-w-7xl mx-auto mt-20 space-y-4 px-4 md:px-6">
-          <h2 className="text-center text-2xl font-bold text-gray-700 mb-5 shadow-sm font-serif">
-            PROJELERİMİZ
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mb-20">
-            {projects.map((project) => {
-              const projectImageUrls = getProjectImageUrls(project);
-              return (
-                  <Link to={`/project/${project._id}`} key={project._id}>
-                    <div className="bg-white rounded-lg shadow-md overflow-hidden">
-                      <img
-                          src={projectImageUrls[0]}
-                          alt={project.name}
-                          className="w-full h-64 object-cover"
-                      />
-                      <div className="p-4">
-                        <h3 className="font-bold text-lg text-gray-700 line-clamp-2">
-                          {project.name}
-                        </h3>
-                        <p className="text-gray-600 text-sm line-clamp-2">
-                          {project.subtitle}
-                        </p>
-                      </div>
-                    </div>
-                  </Link>
-              );
-            })}
-          </div>
+    <li className="border-b border-r border-steel-line">
+      <Link to={`/project/${project._id ?? ''}`} className="group block">
+        <div className="relative aspect-[3/2] overflow-hidden bg-steel">
+          {cover ? (
+            <img
+              src={cover}
+              alt=""
+              width={CARD_W}
+              height={CARD_H}
+              loading="lazy"
+              decoding="async"
+              className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]"
+            />
+          ) : (
+            <div className="flex h-full items-center justify-center">
+              <span className="spec text-concrete">Görsel yok</span>
+            </div>
+          )}
         </div>
-        <Outlet />
+        <div className="p-5">
+          <h2 className="text-display-m font-semibold group-hover:text-hazard transition-colors">
+            {project.name}
+          </h2>
+          {project.subtitle && (
+            <p className="spec mt-2 text-concrete">{project.subtitle}</p>
+          )}
+        </div>
+      </Link>
+    </li>
+  );
+};
+
+const Project = () => {
+  // Same key AdminPanel uses, so the two share one cache entry.
+  const { data: projects = [], isLoading, isError, refetch } = useQuery(
+    ['projects'],
+    fetchProjects
+  );
+
+  return (
+    <Page>
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16 md:py-24">
+        <p className="spec text-hazard mb-4">Projeler</p>
+        <h1 className="text-display-l font-bold uppercase max-w-[18ch]">
+          Tamamladığımız işler
+        </h1>
+
+        {isLoading && (
+          <ul className="mt-14 grid border-l border-t border-steel-line sm:grid-cols-2 lg:grid-cols-3">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <li key={i} className="border-b border-r border-steel-line">
+                <div className="aspect-[3/2] animate-pulse bg-steel" />
+                <div className="p-5">
+                  <div className="h-5 w-2/3 animate-pulse bg-steel" />
+                  <div className="mt-3 h-3 w-1/3 animate-pulse bg-steel" />
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+
+        {isError && (
+          <div className="mt-14 border border-steel-line p-10 text-center">
+            <p className="text-body-l">Projeler yüklenemedi.</p>
+            <button
+              type="button"
+              onClick={() => void refetch()}
+              className="mt-5 inline-flex items-center bg-hazard px-5 py-3 spec font-medium text-graphite hover:bg-hazard/90 transition-colors"
+            >
+              Tekrar deneyin
+            </button>
+          </div>
+        )}
+
+        {!isLoading && !isError && projects.length === 0 && (
+          <div className="mt-14 border border-steel-line p-10 text-center">
+            <p className="text-body-l">Henüz yayımlanmış bir proje yok.</p>
+          </div>
+        )}
+
+        {/* Project count is dynamic, so a gap-px + parent-background grid would
+            paint empty filler cells on any count that isn't a multiple of the
+            column count. Borders live on the cells instead. */}
+        {projects.length > 0 && (
+          <ul className="mt-14 grid border-l border-t border-steel-line sm:grid-cols-2 lg:grid-cols-3">
+            {projects.map((project) => (
+              <ProjectCard key={project._id} project={project} />
+            ))}
+          </ul>
+        )}
       </div>
+    </Page>
   );
 };
 

@@ -1,72 +1,84 @@
-import React from 'react';
-import { renderIcon } from '../../lib/ui/IconUtils';
+import { Link } from 'react-router-dom';
+import { TbBrandInstagram, TbMail, TbMapPin, TbPhone } from 'react-icons/tb';
 
-const Footer: React.FC = () => {
-  return (
-    <div className="footer bg-gray-200 p-2 sm:p-4 shadow-up-md w-full">
-      <div className="container mx-auto flex flex-col sm:flex-row justify-between items-center text-center sm:text-left">
-        <div className="mb-2 sm:mb-0">
-          <span className="text-xs sm:text-sm font-light">
-            © {new Date().getFullYear()} TORA VİNÇ & İNŞAAT. Tüm hakları
-            saklıdır.
-          </span>
-        </div>
+import { NAV_LINKS, SITE, mapsUrl } from '../../lib/site';
 
-        <div className="contact-info flex flex-col sm:flex-row gap-2 sm:gap-4 justify-center items-center mb-2 sm:mb-0">
+const Footer = () => (
+  <footer data-surface="graphite" className="border-t border-steel-line">
+    <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-14">
+      <div className="grid gap-12 md:grid-cols-3">
+        <div>
+          <p className="text-lg font-semibold tracking-tight">{SITE.name}</p>
+          <p className="mt-3 max-w-xs text-concrete leading-relaxed">
+            {SITE.since} {SITE.city} ve çevresinde vinç ve inşaat hizmetleri.
+          </p>
           <a
-            href="tel:+905333895972"
-            className="text-gray-600 hover:text-gray-800 transition duration-300 flex items-center justify-center"
+            href={SITE.instagram}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-6 inline-flex items-center gap-2 spec text-concrete hover:text-hazard transition-colors"
           >
-            {renderIcon({
-              iconType: 'BsFillTelephoneFill',
-              sizeClass: 'text-md sm:text-lg',
-            })}
-            <span className="ml-1 sm:ml-2">+90 533 389 59 72</span>
-          </a>
-          <a
-            href="mailto:toravincinsaat@gmail.com"
-            className="text-gray-600 hover:text-gray-800 transition duration-300 flex items-center justify-center"
-          >
-            {renderIcon({
-              iconType: 'IoMdMail',
-              sizeClass: 'text-lg sm:text-2xl',
-            })}
-            <span className="ml-1 sm:ml-2">toravincinsaat@gmail.com</span>
+            <TbBrandInstagram aria-hidden="true" className="text-lg" />
+            Instagram
           </a>
         </div>
 
-        <div className="social flex gap-2 sm:gap-4 justify-center items-center">
-          {/* <a
-            href="https://facebook.com"
-            className="text-gray-600 hover:text-gray-800 transition duration-300"
-          >
-            {renderIcon({
-              iconType: 'FaFacebookF',
-              sizeClass: 'text-lg sm:text-xl',
-            })}
-          </a> */}
-          {/* <a
-            href="https://twitter.com"
-            className="text-gray-600 hover:text-gray-800 transition duration-300"
-          >
-            {renderIcon({
-              iconType: 'FaTwitter',
-              sizeClass: 'text-lg sm:text-xl',
-            })}
-          </a> */}
-          <a
-            href="https://instagram.com/toravincinsaat"
-            className="text-gray-600 hover:text-gray-800 transition duration-300"
-          >
-            {renderIcon({
-              iconType: 'FaInstagram',
-              sizeClass: 'text-lg sm:text-xl',
-            })}
-          </a>
+        <nav aria-label="Alt menü">
+          <h2 className="spec text-concrete mb-4">Site haritası</h2>
+          <ul className="space-y-2.5">
+            {NAV_LINKS.map(({ to, label }) => (
+              <li key={to}>
+                <Link to={to} className="hover:text-hazard transition-colors">
+                  {label.charAt(0) + label.slice(1).toLocaleLowerCase('tr')}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </nav>
+
+        <div>
+          <h2 className="spec text-concrete mb-4">İletişim</h2>
+          <ul className="space-y-3.5">
+            <li>
+              <a
+                href={`tel:${SITE.phone.replace(/\s/g, '')}`}
+                className="flex items-start gap-3 hover:text-hazard transition-colors"
+              >
+                <TbPhone aria-hidden="true" className="mt-0.5 shrink-0 text-lg text-hazard" />
+                <span className="spec">{SITE.phone}</span>
+              </a>
+            </li>
+            <li>
+              <a
+                href={`mailto:${SITE.email}`}
+                className="flex items-start gap-3 hover:text-hazard transition-colors"
+              >
+                <TbMail aria-hidden="true" className="mt-0.5 shrink-0 text-lg text-hazard" />
+                <span className="break-all">{SITE.email}</span>
+              </a>
+            </li>
+            <li>
+              <a
+                href={mapsUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-start gap-3 text-concrete hover:text-hazard transition-colors"
+              >
+                <TbMapPin aria-hidden="true" className="mt-0.5 shrink-0 text-lg text-hazard" />
+                <span className="leading-relaxed">{SITE.address}</span>
+              </a>
+            </li>
+          </ul>
         </div>
       </div>
+
+      <div className="mt-12 border-t border-steel-line pt-6">
+        <p className="spec text-concrete">
+          © {new Date().getFullYear()} {SITE.name}
+        </p>
+      </div>
     </div>
-  );
-};
+  </footer>
+);
 
 export default Footer;

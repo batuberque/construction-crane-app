@@ -1,3 +1,9 @@
 node_modules
+dist
+.git
+.env
 .eslintrc
+.eslintrc.json
+.DS_Store
 Dockerfile
+dev.Dockerfile

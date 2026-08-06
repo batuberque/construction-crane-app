@@ -1,82 +1,196 @@
-/* eslint-disable @typescript-eslint/restrict-template-expressions */
-/* eslint-disable @typescript-eslint/no-misused-promises */
-/* eslint-disable @typescript-eslint/no-floating-promises */
-import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { fetchProjects, deleteProject, IProject } from '../../services/queries';
+import { useState } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { TbPencil, TbPlus, TbTrash } from 'react-icons/tb';
+
+import Page from '../../lib/ui/Page';
+import Modal from '../../lib/ui/modal';
 import ProjectModal from './ProjectModal';
-import LoadingFullscreen from '../Loading/LoadingComponent';
-import axiosInstance from '../../services/axios';
+import { IProject, deleteProject, fetchProjects, getProjectImageUrls } from '../../services/queries';
 
-const AdminPanel: React.FC = () => {
-  const {
-    data: projects,
-    isLoading,
-    isError,
-    refetch,
-  } = useQuery<IProject[], Error>(['projects'], fetchProjects);
-  const [selectedProject, setSelectedProject] = useState<IProject | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+const AdminPanel = () => {
+  const queryClient = useQueryClient();
+  const { data: projects = [], isLoading, isError, refetch } = useQuery<IProject[], Error>(
+    ['projects'],
+    fetchProjects
+  );
 
-  const openModal = (project: IProject | null) => {
-    setSelectedProject(project);
-    setIsModalOpen(true);
+  const [editing, setEditing] = useState<IProject | null>(null);
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [pendingDelete, setPendingDelete] = useState<IProject | null>(null);
+
+  const removeProject = useMutation({
+    mutationFn: (id: string) => deleteProject(id),
+    onSuccess: () => {
+      void queryClient.invalidateQueries(['projects']);
+      setPendingDelete(null);
+    },
+  });
+
+  const openForm = (project: IProject | null) => {
+    setEditing(project);
+    setIsFormOpen(true);
   };
-
-  const handleDelete = async (id: string) => {
-    await deleteProject(id);
-    refetch();
-  };
-
-  if (isLoading) return <LoadingFullscreen />;
-  if (isError) return <p>Error loading projects</p>;
 
   return (
-    <div className="container mx-auto p-4 pt-10">
-      <h1 className="text-2xl font-bold mb-4 pt-10">Admin Panel</h1>
-      <button
-        className="bg-gray-500 text-white px-3 py-1 rounded mb-4"
-        onClick={() => openModal(null)}
-      >
-        Proje Ekle
-      </button>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {projects?.map((project) => (
-          <div key={project._id} className="bg-white p-4 rounded-lg shadow">
-            <h2 className="font-bold">{project.name}</h2>
-            {project.images[0] && (
-              <img
-                src={`${axiosInstance.defaults.baseURL}/${project.images[0]}`}
-                alt={`Preview of ${project.name}`}
-                className="w-full h-32 object-cover rounded mt-2"
-              />
-            )}
-            <p className="text-sm mt-2 line-clamp-2">{project.description}</p>
-            <div className="flex justify-between items-center mt-4">
-              <button
-                className="bg-blue-500 text-white px-3 py-1 rounded"
-                onClick={() => openModal(project)}
-              >
-                Düzenle
-              </button>
-              <button
-                className="bg-red-500 text-white px-3 py-1 rounded"
-                onClick={() => handleDelete(project._id)}
-              >
-                Sil
-              </button>
-            </div>
+    <Page>
+      <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 py-14">
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <p className="spec text-concrete mb-2">Yönetim</p>
+            <h1 className="text-display-m font-bold uppercase">Projeler</h1>
           </div>
-        ))}
+          <button
+            type="button"
+            onClick={() => openForm(null)}
+            className="inline-flex items-center gap-2 bg-hazard px-5 py-3 spec font-medium text-graphite hover:bg-hazard/90 transition-colors"
+          >
+            <TbPlus aria-hidden="true" className="text-base" /> Yeni proje
+          </button>
+        </div>
+
+        {isLoading && (
+          <ul className="mt-10 divide-y divide-steel-line border-y border-steel-line">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <li key={i} className="flex items-center gap-4 py-4">
+                <div className="h-16 w-24 shrink-0 animate-pulse bg-steel" />
+                <div className="flex-1">
+                  <div className="h-4 w-1/3 animate-pulse bg-steel" />
+                  <div className="mt-2 h-3 w-1/5 animate-pulse bg-steel" />
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+
+        {isError && (
+          <div className="mt-10 border border-steel-line p-8 text-center">
+            <p>Projeler yüklenemedi.</p>
+            <button
+              type="button"
+              onClick={() => void refetch()}
+              className="mt-4 inline-flex items-center bg-hazard px-5 py-2.5 spec text-graphite hover:bg-hazard/90 transition-colors"
+            >
+              Tekrar deneyin
+            </button>
+          </div>
+        )}
+
+        {!isLoading && !isError && projects.length === 0 && (
+          <div className="mt-10 border border-dashed border-steel-line p-12 text-center">
+            <p className="text-body-l">Henüz proje eklenmemiş.</p>
+            <p className="mt-2 text-concrete">
+              İlk projenizi ekleyin; sitede Projeler sayfasında görünecek.
+            </p>
+            <button
+              type="button"
+              onClick={() => openForm(null)}
+              className="mt-6 inline-flex items-center gap-2 bg-hazard px-5 py-3 spec font-medium text-graphite hover:bg-hazard/90 transition-colors"
+            >
+              <TbPlus aria-hidden="true" className="text-base" /> Yeni proje
+            </button>
+          </div>
+        )}
+
+        {projects.length > 0 && (
+          <ul className="mt-10 divide-y divide-steel-line border-y border-steel-line">
+            {projects.map((project) => {
+              // Was built from the API host; every other consumer uses GCS.
+              const [cover] = getProjectImageUrls(project);
+              return (
+                <li key={project._id} className="flex items-center gap-4 py-4">
+                  <div className="h-16 w-24 shrink-0 overflow-hidden bg-steel">
+                    {cover && (
+                      <img
+                        src={cover}
+                        alt=""
+                        loading="lazy"
+                        decoding="async"
+                        className="h-full w-full object-cover"
+                      />
+                    )}
+                  </div>
+
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-semibold">{project.name}</p>
+                    {project.subtitle && (
+                      <p className="spec mt-1 truncate text-concrete">{project.subtitle}</p>
+                    )}
+                    <p className="spec mt-1 text-concrete">
+                      {project.images.length} görsel
+                    </p>
+                  </div>
+
+                  <div className="flex shrink-0 gap-1">
+                    <button
+                      type="button"
+                      onClick={() => openForm(project)}
+                      aria-label={`${project.name} projesini düzenle`}
+                      className="p-2.5 text-concrete hover:text-signal transition-colors"
+                    >
+                      <TbPencil aria-hidden="true" className="text-xl" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setPendingDelete(project)}
+                      aria-label={`${project.name} projesini sil`}
+                      className="p-2.5 text-concrete hover:text-red-400 transition-colors"
+                    >
+                      <TbTrash aria-hidden="true" className="text-xl" />
+                    </button>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        )}
       </div>
-      {isModalOpen && (
+
+      {isFormOpen && (
         <ProjectModal
-          project={selectedProject}
-          onClose={() => setIsModalOpen(false)}
-          onProjectUpdate={refetch}
+          project={editing}
+          onClose={() => setIsFormOpen(false)}
+          onSaved={() => void queryClient.invalidateQueries(['projects'])}
         />
       )}
-    </div>
+
+      {/* The delete button used to fire immediately with no confirmation, while
+          the modal's "Sil" button asked for confirmation and then deleted
+          nothing. */}
+      <Modal
+        open={Boolean(pendingDelete)}
+        onClose={() => setPendingDelete(null)}
+        title="Projeyi silin"
+        footer={
+          <div className="flex justify-end gap-3">
+            <button
+              type="button"
+              onClick={() => setPendingDelete(null)}
+              className="px-5 py-2.5 spec border border-steel-line hover:bg-steel transition-colors"
+            >
+              Vazgeçin
+            </button>
+            <button
+              type="button"
+              disabled={removeProject.isLoading}
+              onClick={() => pendingDelete?._id && removeProject.mutate(pendingDelete._id)}
+              className="px-5 py-2.5 spec font-medium bg-red-700 text-white hover:bg-red-800 disabled:opacity-50 transition-colors"
+            >
+              {removeProject.isLoading ? 'Siliniyor…' : 'Silin'}
+            </button>
+          </div>
+        }
+      >
+        <p>
+          <strong>{pendingDelete?.name}</strong> projesi kalıcı olarak silinecek.
+          Bu işlem geri alınamaz.
+        </p>
+        {removeProject.isError && (
+          <p role="alert" className="mt-4 border-l-2 border-red-500 bg-steel p-3">
+            Proje silinemedi. Lütfen tekrar deneyin.
+          </p>
+        )}
+      </Modal>
+    </Page>
   );
 };
 

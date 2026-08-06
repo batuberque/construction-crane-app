@@ -5,20 +5,16 @@ import path from 'path';
 export default defineConfig({
   plugins: [react()],
   root: 'src',
-  resolve: {
-    alias: {
-      '@components': path.resolve(__dirname, './src/components'),
-      '@hooks': path.resolve(__dirname, './src/hooks'),
-      '@lib': path.resolve(__dirname, './src/lib'),
-      '@services': path.resolve(__dirname, './src/services'),
-      '@ui': path.resolve(__dirname, './src/lib/ui'),
-    },
+  // src/public does not exist; keep the public dir at the package root.
+  publicDir: path.resolve(__dirname, 'public'),
+  build: {
+    outDir: path.resolve(__dirname, 'dist'),
+    emptyOutDir: true,
   },
   server: {
     host: '0.0.0.0',
     port: 8080,
-    watch: {
-      usePolling: true,
-    },
+    // Needed for bind-mounted source in the dev container; dev-only.
+    watch: { usePolling: true },
   },
 });

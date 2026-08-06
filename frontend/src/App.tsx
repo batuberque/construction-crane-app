@@ -1,39 +1,39 @@
-import React, { lazy, Suspense } from 'react';
+import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import { QueryClientProvider } from '@tanstack/react-query';
+
 import { queryClient } from './services/query-client';
-
 import './index.css';
-import LoadingFullscreen from './components/Loading/LoadingComponent';
+import NavBar from './components/NavBar/NavBar';
+import Footer from './components/Footer/Footer';
+import AnimatedRouter from './components/AnimatedRouter';
 
-const NavBar = lazy(() => import('./components/NavBar/NavBar'));
-const Footer = lazy(() => import('./components/Footer/Footer'));
-const AnimatedRouter = lazy(() => import('./components/AnimatedRouter'));
-
-const App = () => {
-  return (
-    <div className="flex flex-col min-h-screen bg-checks-pattern">
-      <BrowserRouter>
-        <QueryClientProvider client={queryClient}>
-          <Suspense fallback={<LoadingFullscreen />}>
-            <NavBar />
-            <AnimatedRouter />
-            <Footer />
-          </Suspense>
-        </QueryClientProvider>
-      </BrowserRouter>
-    </div>
-  );
-};
+/**
+ * The shell is deliberately NOT lazy. AnimatedRouter is what *contains* the
+ * route-level lazy() calls, so lazying it meant none of those imports could
+ * even be discovered until its own chunk had downloaded and executed — three
+ * sequential round trips before first paint.
+ */
+const App = () => (
+  <div className="flex flex-col min-h-screen bg-graphite">
+    <BrowserRouter>
+      <QueryClientProvider client={queryClient}>
+        <NavBar />
+        <AnimatedRouter />
+        <Footer />
+      </QueryClientProvider>
+    </BrowserRouter>
+  </div>
+);
 
 const container = document.getElementById('root');
 
 if (!container) {
   throw new Error('no container to render to');
 }
-const root = createRoot(container);
-root.render(
+
+createRoot(container).render(
   <React.StrictMode>
     <App />
   </React.StrictMode>

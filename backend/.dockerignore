@@ -5,3 +5,15 @@ requests.http
 __mocks__
 jest.config.jest
 Dockerfile
+dev.Dockerfile
+
+# Secrets must never be baked into an image layer. They are supplied at run
+# time: env vars via Cloud Run / compose env_file, and the service-account key
+# via a mounted volume or Cloud Run's built-in service identity.
+.env
+.env.*
+gloud.json
+*.json.key
+uploads
+.git
+.DS_Store

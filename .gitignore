@@ -1,2 +1,14 @@
+node_modules/
+dist/
 data
 uploads/
+.DS_Store
+
+# Secrets — never commit. The .env.* glob also catches editor/tooling backups
+# like .env.bak, which the bare ".env" rule silently missed.
+.env
+.env.*
+gloud.json
+*.key
+*.pem
+*-service-account*.json
